@@ -404,19 +404,74 @@ function renderB(){
   b_p_sum.textContent = curB.player.length?sumB(curB.player):'—';
   b_b_sum.textContent = curB.banker.length?sumB(curB.banker):'—';
 }
+document.getElementById('bBetPlayer').addEventListener('click', ()=>{
+  bBetType='player'; bStatus.textContent='Ставка на Player';
+});
+document.getElementById('bBetBank').addEventListener('click', ()=>{
+  bBetType='bank'; bStatus.textContent='Ставка на Banker (-5% комиссии)';
+});
+document.getElementById('bBetTie').addEventListener('click', ()=>{
+  bBetType='tie'; bStatus.textContent='Ставка на Tie (x8)';
+});
 
-function bFinish(){ renderB(); const p=sumB(curB.player), d=sumB(curB.banker); bStatus.textContent = `Результат: Player ${p} — Banker ${d}`;
+/* ---------- Deal ---------- */
+document.getElementById('bDeal').addEventListener('click', ()=>{
+  if(!canBet()){ bStatus.textContent='Недостаточно средств!'; return; }
+  if(!bBetType){ bStatus.textContent='Сначала выбери ставку!'; return; }
+
+  takeBet();
+  if(bDeck.length<10) bDeck=newDeck(6);
+
+  curB={player:[bDeck.pop(), bDeck.pop()], banker:[bDeck.pop(), bDeck.pop()]};
+  renderB();
+
+  setTimeout(bRules, 400);
+});
+
+function bRules(){
+  let p = sumB(curB.player), d = sumB(curB.banker);
+
+  // Natural 8/9
+  if(p>=8 || d>=8){ return bFinish(); }
+
+  // Player rule
+  if(p<=5){ curB.player.push(bDeck.pop()); renderB(); }
+
+  // Banker rule
+  d = sumB(curB.banker); p = sumB(curB.player);
+  if(curB.player.length===3){
+    const third = valueB(curB.player[2]);
+    if(d<=2) curB.banker.push(bDeck.pop());
+    else if(d===3 && third!==8) curB.banker.push(bDeck.pop());
+    else if(d===4 && [2,3,4,5,6,7].includes(third)) curB.banker.push(bDeck.pop());
+    else if(d===5 && [4,5,6,7].includes(third)) curB.banker.push(bDeck.pop());
+    else if(d===6 && [6,7].includes(third)) curB.banker.push(bDeck.pop());
+  } else {
+    if(d<=5) curB.banker.push(bDeck.pop());
+  }
+
+  renderB();
+  setTimeout(bFinish, 400);
+}
+
+function bFinish(){
+  renderB();
+  const p = sumB(curB.player), d = sumB(curB.banker);
+  bStatus.textContent = `Результат: Player ${p} — Banker ${d}`;
+
   if(bBetType==='player'){
-    if(p>d){ pay(state.bet*2); bStatus.textContent += ' — Ты выиграл (Player).'; }
-    else if(p===d){ pay(state.bet); bStatus.textContent += ' — Ничья.'; }
-    else bStatus.textContent += ' — Проигрыш.';
-  } else if(bBetType==='bank'){
-    if(d>p){ pay(state.bet*1.95); bStatus.textContent += ' — Ты выиграл (Banker, комиссия 5%).'; }
-    else if(d===p){ pay(state.bet); bStatus.textContent += ' — Ничья.'; }
-    else bStatus.textContent += ' — Проигрыш.';
-  } else if(bBetType==='tie'){
-    if(d===p){ pay(state.bet*9); bStatus.textContent += ' — Ничья! Выплата ×8 (включая ставку).'; }
-    else bStatus.textContent += ' — Проигрыш.';
+    if(p>d){ pay(state.bet*2); bStatus.textContent+=' — Выиграл Player!'; }
+    else if(p===d){ pay(state.bet); bStatus.textContent+=' — Ничья (возврат).'; }
+    else { bStatus.textContent+=' — Проигрыш.'; }
+  }
+  else if(bBetType==='bank'){
+    if(d>p){ pay(state.bet*1.95); bStatus.textContent+=' — Выиграл Banker (комиссия 5%).'; }
+    else if(d===p){ pay(state.bet); bStatus.textContent+=' — Ничья (возврат).'; }
+    else { bStatus.textContent+=' — Проигрыш.'; }
+  }
+  else if(bBetType==='tie'){
+    if(p===d){ pay(state.bet*8); bStatus.textContent+=' — Победа на Tie (x8)!'; }
+    else { bStatus.textContent+=' — Проигрыш.'; }
   }
 }
 
@@ -579,3 +634,4 @@ setInterval(()=>{ // trim logs
 </script>
 </body>
 </html>
+
