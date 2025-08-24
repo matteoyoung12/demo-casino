@@ -577,7 +577,7 @@ const wheelCanvas = document.getElementById('wheelCanvas');
 const wheelLog = document.getElementById('wheelLog');
 const wheelCtx = wheelCanvas.getContext('2d');
 const wheelSegments = 12;
-const wheelMultipliers = [0,0.5,1,1,1,2,2,3,3,5,1,0];
+const wheelMultipliers = [0,0.5,1,1,1,2,2,1,1,0,1,0];
 document.getElementById('wheelSegments').textContent = wheelSegments;
 
 function drawWheel(angle=0){
@@ -633,6 +633,7 @@ setInterval(()=>{ // trim logs
 </script>
 </body>
 </html>
+
 
 
 
