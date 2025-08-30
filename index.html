@@ -313,27 +313,51 @@ function pay(amount){ state.balance = Math.round((state.balance + amount)*100)/1
 /* ---------------- BLACKJACK ---------------- */
 const deckRanks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 const suits = ['♠','♥','♦','♣'];
+
 function newDeck(numDecks=6){
-  const d = []; for(let s of suits) for(let r of deckRanks) d.push({r,s});
-  let big=[]; for(let i=0;i<numDecks;i++) big = big.concat(d.map(x=>({...x})));
-  for(let i=big.length-1;i>0;i--){ const j=rng.n(i+1); [big[i],big[j]]=[big[j],big[i]]; }
+  const d = [];
+  for(let s of suits) for(let r of deckRanks) d.push({r,s});
+  let big=[];
+  for(let i=0;i<numDecks;i++) big = big.concat(d.map(x=>({...x})));
+  for(let i=big.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [big[i],big[j]]=[big[j],big[i]];
+  }
   return big;
 }
-function cardValueBJ(card){ if(card.r==='A') return 1; if(['J','Q','K'].includes(card.r)) return 10; return Number(card.r); }
-function sumHand(cards){ let sum=0, aces=0; for(let c of cards){ sum += cardValueBJ(c); if(c.r==='A') aces++; } for(let i=0;i<aces;i++){ if(sum+10<=21) sum+=10; } return sum; }
+function cardValueBJ(card){
+  if(card.r==='A') return 1;
+  if(['J','Q','K'].includes(card.r)) return 10;
+  return Number(card.r);
+}
+function sumHand(cards){
+  let sum=0, aces=0;
+  for(let c of cards){ sum += cardValueBJ(c); if(c.r==='A') aces++; }
+  for(let i=0;i<aces;i++){ if(sum+10<=21) sum+=10; }
+  return sum;
+}
 
 let bjDeck = newDeck(4);
 let bjPlayer = [], bjDealer = [], dealerHidden=true;
 const bjLog = document.getElementById('bjLog');
 
-function makeCardEl(c, small=false){ const div=document.createElement('div'); div.className='card'+(small?' small':'')+' fade-in'; div.innerHTML=`<div>${c.r}${c.s}</div><div class="suit">${c.s}</div>`; return div; }
-function makeBackEl(small=false){ const div=document.createElement('div'); div.className='card back'+(small?' small':'')+' fade-in'; div.textContent='★'; return div; }
+function makeCardEl(c, small=false){
+  const div=document.createElement('div');
+  div.className='card'+(small?' small':'')+' fade-in';
+  div.innerHTML=`<div>${c.r}${c.s}</div><div class="suit">${c.s}</div>`;
+  return div;
+}
+function makeBackEl(small=false){
+  const div=document.createElement('div');
+  div.className='card back'+(small?' small':'')+' fade-in';
+  div.textContent='★';
+  return div;
+}
 
 function renderBJ(){
   const ph = document.getElementById('playerHand');
   const dh = document.getElementById('dealerHand');
   ph.innerHTML=''; dh.innerHTML='';
-  // Dealer: first open, second hidden until stand
   if(bjDealer.length){
     dh.appendChild(makeCardEl(bjDealer[0]));
     if(bjDealer[1]) dh.appendChild(dealerHidden ? makeBackEl() : makeCardEl(bjDealer[1]));
@@ -347,10 +371,19 @@ function appendBJLog(txt,cls=''){ bjLog.insertAdjacentHTML('afterbegin', `<div c
 
 function reshuffleIfNeeded(){ if(bjDeck.length<15) bjDeck=newDeck(4); }
 
+function enableBJControls(active){
+  document.getElementById('bjHit').disabled = !active;
+  document.getElementById('bjStand').disabled = !active;
+}
+
 function bjStart(){
   if(!canBet()){ appendBJLog('Недостаточно средств для ставки','log-lose'); return; }
-  takeBet(); reshuffleIfNeeded(); bjPlayer=[]; bjDealer=[]; dealerHidden=true; renderBJ();
-  // deal with slight delays
+  takeBet(); // списываем ставку
+
+  reshuffleIfNeeded(); bjPlayer=[]; bjDealer=[]; dealerHidden=true; renderBJ();
+  enableBJControls(true);
+
+  // deal
   bjPlayer.push(bjDeck.pop()); renderBJ();
   setTimeout(()=>{ bjDealer.push(bjDeck.pop()); renderBJ();
     setTimeout(()=>{ bjPlayer.push(bjDeck.pop()); renderBJ();
@@ -362,20 +395,63 @@ function bjStart(){
 
 function bjCheckBlackjack(){
   const p=sumHand(bjPlayer), d=sumHand(bjDealer);
-  if(p===21 && d!==21){ appendBJLog('Blackjack! Выплата 1.5×','log-win'); pay(state.bet*2.5); }
-  else if(p===21 && d===21){ appendBJLog('Ничья (оба Blackjack). Возврат ставки.'); pay(state.bet); }
+  if(p===21 && d!==21){ 
+    appendBJLog('Blackjack! Выплата 1.5×','log-win'); 
+    pay(state.bet*2.5); 
+    enableBJControls(false); 
+  }
+  else if(p===21 && d===21){ 
+    appendBJLog('Ничья (оба Blackjack). Возврат ставки.'); 
+    pay(state.bet); 
+    enableBJControls(false); 
+  }
 }
 
-function bjHit(){ if(!bjPlayer.length){ appendBJLog('Нажмите Deal прежде чем брать карты.'); return;} bjPlayer.push(bjDeck.pop()); renderBJ(); const s=sumHand(bjPlayer); appendBJLog('Игрок взял карту. Сумма: '+s); if(s>21){ appendBJLog('Перебор! Вы проиграли.','log-lose'); } }
-
-function bjStand(){ if(!bjPlayer.length){ appendBJLog('Нажмите Deal прежде чем стоять.'); return;} dealerHidden=false; renderBJ();
-  // dealer draws to 17
-  (function dealerPlay(){ const ds=sumHand(bjDealer); if(ds<17){ setTimeout(()=>{ bjDealer.push(bjDeck.pop()); renderBJ(); dealerPlay(); }, 250); } else { bjFinish(); } })();
+function bjHit(){
+  if(!bjPlayer.length){ appendBJLog('Нажмите Deal прежде чем брать карты.'); return;}
+  bjPlayer.push(bjDeck.pop());
+  renderBJ();
+  const s=sumHand(bjPlayer);
+  appendBJLog('Игрок взял карту. Сумма: '+s);
+  if(s>21){
+    appendBJLog('Перебор! Вы проиграли.','log-lose');
+    dealerHidden = false;
+    renderBJ();
+    enableBJControls(false);
+    // ставка проиграна, поэтому ничего не возвращаем
+  }
 }
 
-function bjFinish(){ const p=sumHand(bjPlayer), d=sumHand(bjDealer); renderBJ(); if(d>21 || p>d){ appendBJLog(`Вы выиграли! +${formatMoney(state.bet*2)} (выплата включая ставку).`,'log-win'); pay(state.bet*2); }
-  else if(p===d){ appendBJLog('Ничья — ставка возвращена.'); pay(state.bet); }
-  else { appendBJLog('Дилер выиграл — ставка потеряна.','log-lose'); }
+function bjStand(){
+  if(!bjPlayer.length){ appendBJLog('Нажмите Deal прежде чем стоять.'); return;}
+  dealerHidden=false; renderBJ();
+  (function dealerPlay(){
+    const ds=sumHand(bjDealer);
+    if(ds<17){ setTimeout(()=>{ bjDealer.push(bjDeck.pop()); renderBJ(); dealerPlay(); }, 250); }
+    else { bjFinish(); }
+  })();
+}
+
+function bjFinish(){
+  const p=sumHand(bjPlayer), d=sumHand(bjDealer);
+  renderBJ();
+  if(p>21){ 
+    appendBJLog('Перебор! Вы проиграли.','log-lose'); 
+    enableBJControls(false); 
+    return; 
+  }
+  if(d>21 || p>d){ 
+    appendBJLog(`Вы выиграли! +${state.bet*2}`,'log-win'); 
+    pay(state.bet*2); 
+  }
+  else if(p===d){ 
+    appendBJLog('Ничья — ставка возвращена.'); 
+    pay(state.bet); 
+  }
+  else { 
+    appendBJLog('Дилер выиграл — ставка потеряна.','log-lose'); 
+  }
+  enableBJControls(false);
 }
 
 document.getElementById('bjDeal').addEventListener('click', bjStart);
@@ -633,6 +709,7 @@ setInterval(()=>{ // trim logs
 </script>
 </body>
 </html>
+
 
 
 
