@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>⚜️BLATNAЯ FAMILY ⚜️ Casino — Blackjack / Baccarat / Slot 3x5 / Wheel</title>
-<link rel="stylesheet" href="style.css">
+
   <style>
       :root{
       --bg:#081021;
@@ -542,7 +542,7 @@
     <footer><div class="small">Сделано для демонстрации. Никаких реальных денег.</div></footer>
   </main>
 </div>
-<script src="script.js">
+<script >
   const rng = {
   n(max){
     if(window.crypto && crypto.getRandomValues){
@@ -577,7 +577,7 @@ betInput.addEventListener('change', e=>{
 
 giveBonusBtn.addEventListener('click', ()=>{ state.balance += 100; saveState('demo_balance', state.balance); refreshUI(); });
 
-/* ---------- Navigation ---------- */
+
 /* ---------- Navigation ---------- */
 const items = document.querySelectorAll('.game-item');
 const panels = {
@@ -585,7 +585,7 @@ const panels = {
   baccarat: document.getElementById('baccarat'),
   slot: document.getElementById('slot'),
   wheel: document.getElementById('wheel'),
-  plinko: document.getElementById('plinko') // ✅ запятая добавлена
+  plinko: document.getElementById('plinko') 
 };
 
 const titles = {
@@ -593,7 +593,7 @@ const titles = {
   baccarat: ['Baccarat','Ставки: Player / Banker / Tie'],
   slot: ['Slot 3×5','5 барабанов, 3 ряда, 20 линий'],
   wheel: ['Колесо фортуны','Множители и удача'],
-  plinko: ['Plinko','Игра с мячиками и платформами'] // ✅ исправил "linko" → "plinko"
+  plinko: ['Plinko','Игра с мячиками и платформами'] 
 };
 
 let active = 'blackjack';
@@ -1126,3 +1126,4 @@ setInterval(()=>{ // trim logs
 </script>
 </body>
 </html>
+
