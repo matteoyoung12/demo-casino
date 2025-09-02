@@ -4,8 +4,8 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>⚜️BLATNAЯ FAMILY ⚜️ Casino — Blackjack / Baccarat / Slot 3x5 / Wheel</title>
-  <style>
-        :root{
+
+<style>  :root{
       --bg:#081021;
       --card:#0f1724;
       --accent:#FFD166;
@@ -436,9 +436,12 @@
   background-repeat: no-repeat;
 }
 
+
+
+
+
 /* responsive */
-  @media (max-width:900px){ .main{grid-template-columns:1fr;} nav.panel{height:auto} }
-  </style>
+  @media (max-width:900px){ .main{grid-template-columns:1fr;} nav.panel{height:auto} }</style>
 </head>
 <body>
 <header>
@@ -449,6 +452,7 @@
       <div class="subtitle">Демо-версия — только для развлечения</div>
     </div>
   </div>
+  
   <div class="controls">
     <div class="balance" id="balanceBox">Баланс: <span id="balance">1000</span> <span class="small muted">$</span></div>
     <input type="number" id="betInput" min="1" value="10" />
@@ -635,8 +639,7 @@
     <footer><div class="small">Сделано для демонстрации. Никаких реальных денег.</div></footer>
   </main>
 </div>
-<script >
-  const rng = {
+<script >const rng = {
   n(max){
     if(window.crypto && crypto.getRandomValues){
       const buf = new Uint32Array(1);
@@ -649,8 +652,16 @@
   pick(arr){return arr[this.n(arr.length)]}
 };
 
-function saveState(k,v){try{localStorage.setItem(k, JSON.stringify(v))}catch(e){}}
-function loadState(k,def){try{return JSON.parse(localStorage.getItem(k)) ?? def}catch(e){return def}}
+function saveState(k,v){
+  try{
+  localStorage.setItem(k, JSON.stringify(v))}
+  catch(e){}
+}
+function loadState(k,def){
+  try{
+    return JSON.parse(localStorage.getItem(k)) ?? def
+  }
+    catch(e){return def}}
 
 let state = { balance: loadState('demo_balance', 1000), bet: loadState('demo_bet', 10) };
 function formatMoney(v){ return Math.round(v*100)/100; }
@@ -661,7 +672,10 @@ const betInput = document.getElementById('betInput');
 const currentBetText = document.getElementById('currentBetText');
 const giveBonusBtn = document.getElementById('giveBonus');
 
-function refreshUI(){ balanceEl.textContent = formatMoney(state.balance); betInput.value = state.bet; currentBetText.textContent = state.bet; }
+function refreshUI(){
+   balanceEl.textContent = formatMoney(state.balance); 
+   betInput.value = state.bet; 
+   currentBetText.textContent = state.bet; }
 refreshUI();
 
 betInput.addEventListener('change', e=>{
@@ -670,7 +684,6 @@ betInput.addEventListener('change', e=>{
 
 giveBonusBtn.addEventListener('click', ()=>{ state.balance += 100; saveState('demo_balance', state.balance); refreshUI(); });
 
-
 /* ---------- Navigation ---------- */
 const items = document.querySelectorAll('.game-item');
 const panels = {
@@ -678,7 +691,8 @@ const panels = {
   baccarat: document.getElementById('baccarat'),
   slot: document.getElementById('slot'),
   wheel: document.getElementById('wheel'),
-  plinko: document.getElementById('plinko') 
+  plinko: document.getElementById('plinko'),
+  miner : document.getElementById('miner')// ✅ запятая добавлена
 };
 
 const titles = {
@@ -686,7 +700,8 @@ const titles = {
   baccarat: ['Baccarat','Ставки: Player / Banker / Tie'],
   slot: ['Slot 3×5','5 барабанов, 3 ряда, 20 линий'],
   wheel: ['Колесо фортуны','Множители и удача'],
-  plinko: ['Plinko','Игра с мячиками и платформами'] 
+  plinko: ['Plinko','Игра с мячиками и платформами'],
+  miner: ['Miner','Не попади на мину']
 };
 
 let active = 'blackjack';
@@ -1209,7 +1224,8 @@ function dropBall() {
 // Инициализация
 createPins();
 createSlots();
-
+/* ------------- Miner ------------- */
+// Miner
 let minerCells = 25;
 let mines = [];
 let opened = 0;
@@ -1330,16 +1346,11 @@ function gameOver(won) {
   });
 }
 
+
 /* ---------- Init ---------- */
 refreshUI();
 setInterval(()=>{ // trim logs
   ['bjLog','slotLog','wheelLog'].forEach(id=>{ const el=document.getElementById(id); if(el && el.children.length>100) el.removeChild(el.lastChild); });
-}, 5000);
-</script>
+}, 5000);</script>
 </body>
 </html>
-
-
-
-
-
